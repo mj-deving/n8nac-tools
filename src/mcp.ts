@@ -16,13 +16,11 @@ export async function startMcpServer(): Promise<void> {
     version: '1.0.0',
   });
 
-  // n8nac.list
   server.tool('n8nac.list', 'List all n8n workflows with status', {}, async () => {
     const { run } = await import('./commands/list.js');
     return resultToMcp(await run([]));
   });
 
-  // n8nac.push
   server.tool(
     'n8nac.push',
     'Push a workflow file to n8n (filename only, no path)',
@@ -33,7 +31,6 @@ export async function startMcpServer(): Promise<void> {
     }
   );
 
-  // n8nac.pull
   server.tool(
     'n8nac.pull',
     'Pull a workflow from n8n by ID',
@@ -44,7 +41,6 @@ export async function startMcpServer(): Promise<void> {
     }
   );
 
-  // n8nac.verify
   server.tool(
     'n8nac.verify',
     'Verify a workflow against n8n',
@@ -55,7 +51,6 @@ export async function startMcpServer(): Promise<void> {
     }
   );
 
-  // n8nac.search
   server.tool(
     'n8nac.search',
     'Search available n8n nodes',
@@ -66,7 +61,6 @@ export async function startMcpServer(): Promise<void> {
     }
   );
 
-  // n8n.api
   server.tool(
     'n8n.api',
     'Direct n8n REST API call',

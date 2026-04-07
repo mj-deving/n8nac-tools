@@ -1,7 +1,5 @@
 import type { ParsedArgs, CommandResult } from './types.js';
 
-const VALID_COMMANDS = ['list', 'push', 'pull', 'verify', 'search', 'api', 'help'] as const;
-
 const HELP_TEXT = `
 n8nac-tools - CLI wrapper for n8nac commands
 
