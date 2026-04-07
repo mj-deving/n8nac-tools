@@ -1,8 +1,14 @@
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { COMMANDS } from './commands/registry.js';
 import type { CommandResult } from './types.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 function resultToMcp(result: CommandResult) {
   return {
@@ -14,7 +20,7 @@ function resultToMcp(result: CommandResult) {
 export async function startMcpServer(): Promise<void> {
   const server = new McpServer({
     name: 'n8nac-tools',
-    version: '1.0.0',
+    version: pkg.version,
   });
 
   // Register n8nac commands (no host parameter — they use n8nac's own config)

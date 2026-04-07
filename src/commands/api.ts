@@ -70,6 +70,7 @@ export async function run(args: string[], host?: string): Promise<CommandResult>
         'X-N8N-API-KEY': apiKey,
         'Content-Type': 'application/json',
       },
+      signal: AbortSignal.timeout(30_000),
     });
 
     const body = await response.text();

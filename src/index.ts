@@ -17,11 +17,12 @@ async function main(): Promise<void> {
   const parsed = parseArgs(argv);
   const result = await runCli(parsed);
 
-  process.stdout.write(result.output + '\n');
-  process.exit(result.exitCode);
+  process.stdout.write(result.output + '\n', () => {
+    process.exitCode = result.exitCode;
+  });
 }
 
 main().catch((err) => {
   console.error('Fatal error:', err);
-  process.exit(1);
+  process.exitCode = 1;
 });

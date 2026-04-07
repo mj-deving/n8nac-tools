@@ -16,7 +16,7 @@
     "build": "tsc",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.cjs",
     "lint": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run lint && npm test && npm run build"
   },
   "keywords": [
     "n8n",
@@ -41,6 +41,14 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@n8n-as-code/cli": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@n8n-as-code/cli": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
