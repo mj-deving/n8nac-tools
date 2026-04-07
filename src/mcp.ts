@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { COMMANDS } from './commands/registry.js';
 import type { CommandResult } from './types.js';
 
 function resultToMcp(result: CommandResult) {
@@ -16,61 +17,72 @@ export async function startMcpServer(): Promise<void> {
     version: '1.0.0',
   });
 
-  server.tool('n8nac.list', 'List all n8n workflows with status', {}, async () => {
-    const { run } = await import('./commands/list.js');
-    return resultToMcp(await run([]));
-  });
+  // Register n8nac commands (no host parameter — they use n8nac's own config)
+  for (const cmd of COMMANDS) {
+    if (cmd.name === 'api') continue; // api gets special registration below
 
-  server.tool(
-    'n8nac.push',
-    'Push a workflow file to n8n (filename only, no path)',
-    { filename: z.string().describe('Workflow filename to push (e.g., workflow.ts)') },
-    async ({ filename }) => {
-      const { run } = await import('./commands/push.js');
-      return resultToMcp(await run([filename]));
+    switch (cmd.name) {
+      case 'list':
+        server.tool(cmd.mcpName, cmd.description, {}, async () => {
+          const { run } = await cmd.load();
+          return resultToMcp(await run([]));
+        });
+        break;
+      case 'push':
+        server.tool(
+          cmd.mcpName, cmd.description,
+          { filename: z.string().describe('Workflow filename to push (e.g., workflow.ts)') },
+          async ({ filename }) => {
+            const { run } = await cmd.load();
+            return resultToMcp(await run([filename]));
+          }
+        );
+        break;
+      case 'pull':
+        server.tool(
+          cmd.mcpName, cmd.description,
+          { id: z.string().describe('Workflow ID to pull') },
+          async ({ id }) => {
+            const { run } = await cmd.load();
+            return resultToMcp(await run([id]));
+          }
+        );
+        break;
+      case 'verify':
+        server.tool(
+          cmd.mcpName, cmd.description,
+          { id: z.string().describe('Workflow ID to verify') },
+          async ({ id }) => {
+            const { run } = await cmd.load();
+            return resultToMcp(await run([id]));
+          }
+        );
+        break;
+      case 'search':
+        server.tool(
+          cmd.mcpName, cmd.description,
+          { query: z.string().describe('Search query for n8n nodes') },
+          async ({ query }) => {
+            const { run } = await cmd.load();
+            return resultToMcp(await run([query]));
+          }
+        );
+        break;
     }
-  );
+  }
 
+  // api command — the only one that accepts a host override
+  const apiCmd = COMMANDS.find(c => c.name === 'api')!;
   server.tool(
-    'n8nac.pull',
-    'Pull a workflow from n8n by ID',
-    { id: z.string().describe('Workflow ID to pull') },
-    async ({ id }) => {
-      const { run } = await import('./commands/pull.js');
-      return resultToMcp(await run([id]));
-    }
-  );
-
-  server.tool(
-    'n8nac.verify',
-    'Verify a workflow against n8n',
-    { id: z.string().describe('Workflow ID to verify') },
-    async ({ id }) => {
-      const { run } = await import('./commands/verify.js');
-      return resultToMcp(await run([id]));
-    }
-  );
-
-  server.tool(
-    'n8nac.search',
-    'Search available n8n nodes',
-    { query: z.string().describe('Search query for n8n nodes') },
-    async ({ query }) => {
-      const { run } = await import('./commands/search.js');
-      return resultToMcp(await run([query]));
-    }
-  );
-
-  server.tool(
-    'n8n.api',
-    'Direct n8n REST API call',
+    apiCmd.mcpName,
+    apiCmd.description,
     {
       method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).default('GET').describe('HTTP method'),
       path: z.string().describe('API path (e.g., /api/v1/workflows)'),
       host: z.string().optional().describe('n8n host URL override'),
     },
     async ({ method, path, host }) => {
-      const { run } = await import('./commands/api.js');
+      const { run } = await apiCmd.load();
       return resultToMcp(await run([method, path], host));
     }
   );

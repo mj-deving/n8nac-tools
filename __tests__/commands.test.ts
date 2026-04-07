@@ -3,17 +3,25 @@ import { jest } from '@jest/globals';
 // Mock child_process before importing
 jest.unstable_mockModule('child_process', () => ({
   execFile: jest.fn(),
+  execFileSync: jest.fn(() => { throw new Error('not found'); }),
 }));
 
 const { execFile } = await import('child_process');
-const { runN8nac } = await import('../src/n8nac.js');
+const { runN8nac, getResolvedBin } = await import('../src/n8nac.js');
 
 describe('n8nac runner', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('calls npx n8nac with provided arguments', async () => {
+  it('resolves binary path (falls back to npx when which fails)', () => {
+    const { bin, prefix } = getResolvedBin();
+    // In test env, which is mocked to throw, so should fall back to npx
+    expect(bin).toBe('npx');
+    expect(prefix).toEqual(['n8nac']);
+  });
+
+  it('calls n8nac with provided arguments', async () => {
     const mockExecFile = execFile as unknown as jest.Mock;
     mockExecFile.mockImplementation(
       (_cmd: string, _args: string[], _opts: object, cb: Function) => {
@@ -79,5 +87,26 @@ describe('command modules', () => {
   it('api command exports a run function', async () => {
     const { run } = await import('../src/commands/api.js');
     expect(typeof run).toBe('function');
+  });
+});
+
+describe('command registry', () => {
+  it('exports all 6 commands', async () => {
+    const { COMMANDS, COMMAND_MAP } = await import('../src/commands/registry.js');
+    expect(COMMANDS).toHaveLength(6);
+    expect(COMMAND_MAP.size).toBe(6);
+  });
+
+  it('only api command accepts host', async () => {
+    const { COMMANDS } = await import('../src/commands/registry.js');
+    const hostCommands = COMMANDS.filter(c => c.acceptsHost);
+    expect(hostCommands).toHaveLength(1);
+    expect(hostCommands[0]!.name).toBe('api');
+  });
+
+  it('each command has a unique mcpName', async () => {
+    const { COMMANDS } = await import('../src/commands/registry.js');
+    const names = COMMANDS.map(c => c.mcpName);
+    expect(new Set(names).size).toBe(names.length);
   });
 });

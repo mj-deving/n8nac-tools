@@ -1,3 +1,4 @@
+import { COMMAND_MAP } from './commands/registry.js';
 import type { ParsedArgs, CommandResult } from './types.js';
 
 const HELP_TEXT = `
@@ -15,7 +16,7 @@ Commands:
   api <METHOD> <path>           Direct n8n REST API call
 
 Options:
-  --host <url>                  n8n host URL (default: http://localhost:5678)
+  --host <url>                  n8n host URL (only applies to the api command)
                                 Also configurable via N8N_HOST env var
   --help                        Show this help message
 
@@ -30,7 +31,7 @@ Examples:
   n8nac-tools verify 123
   n8nac-tools search "email validation"
   n8nac-tools api GET /api/v1/workflows
-  n8nac-tools --host http://myhost:5678 list
+  n8nac-tools --host http://myhost:5678 api GET /api/v1/workflows
 `.trim();
 
 /**
@@ -72,25 +73,18 @@ export async function runCli(parsed: ParsedArgs): Promise<CommandResult> {
     return { output: HELP_TEXT, exitCode: 0 };
   }
 
-  const commandMap: Record<string, () => Promise<{ run: (args: string[], host?: string) => Promise<CommandResult> }>> = {
-    list: () => import('./commands/list.js'),
-    push: () => import('./commands/push.js'),
-    pull: () => import('./commands/pull.js'),
-    verify: () => import('./commands/verify.js'),
-    search: () => import('./commands/search.js'),
-    api: () => import('./commands/api.js'),
-  };
-
-  const loader = commandMap[parsed.command];
-  if (!loader) {
+  const descriptor = COMMAND_MAP.get(parsed.command);
+  if (!descriptor) {
     return {
       output: `Unknown command: ${parsed.command}\n\nRun "n8nac-tools --help" for usage.`,
       exitCode: 1,
     };
   }
 
-  const mod = await loader();
-  return mod.run(parsed.args, parsed.options.host);
+  const mod = await descriptor.load();
+  // Only pass --host to commands that accept it (api). Others use n8nac's own config.
+  const host = descriptor.acceptsHost ? parsed.options.host : undefined;
+  return mod.run(parsed.args, host);
 }
 
 export { HELP_TEXT };

@@ -1,7 +1,22 @@
 import { jest } from '@jest/globals';
-import { loadCredentials, resolveHost } from '../src/commands/api.js';
+import { loadCredentials, resolveHost, normalizeHost } from '../src/commands/api.js';
 
 describe('API command', () => {
+  describe('normalizeHost', () => {
+    it('strips trailing slashes', () => {
+      expect(normalizeHost('http://localhost:5678/')).toBe('http://localhost:5678');
+      expect(normalizeHost('http://localhost:5678///')).toBe('http://localhost:5678');
+    });
+
+    it('lowercases the host', () => {
+      expect(normalizeHost('HTTP://MyHost:5678')).toBe('http://myhost:5678');
+    });
+
+    it('handles already-normalized input', () => {
+      expect(normalizeHost('http://localhost:5678')).toBe('http://localhost:5678');
+    });
+  });
+
   describe('resolveHost', () => {
     const originalEnv = process.env;
 
@@ -20,6 +35,10 @@ describe('API command', () => {
 
     it('uses --host flag when provided', () => {
       expect(resolveHost('http://custom:9999')).toBe('http://custom:9999');
+    });
+
+    it('normalizes --host flag with trailing slash', () => {
+      expect(resolveHost('http://custom:9999/')).toBe('http://custom:9999');
     });
 
     it('uses N8N_HOST env var when set', () => {
