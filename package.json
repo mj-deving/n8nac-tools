@@ -1,25 +1,43 @@
 {
   "name": "n8nac-tools",
   "version": "1.0.0",
-  "description": "CLI-first tool (with MCP adapter) that wraps n8nac commands",
+  "description": "CLI-first tool wrapping n8nac commands for humans, AI agents, and MCP clients",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "n8nac-tools": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.cjs",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "n8n",
     "n8nac",
+    "n8n-as-code",
     "mcp",
-    "cli"
+    "cli",
+    "workflow",
+    "automation",
+    "ai-agent"
   ],
-  "author": "",
+  "author": "mj-deving",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mj-deving/n8nac-tools.git"
+  },
+  "homepage": "https://github.com/mj-deving/n8nac-tools#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.3.6"
