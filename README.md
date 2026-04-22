@@ -1,5 +1,7 @@
 # n8nac-tools
 
+![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?style=flat-square) ![CLI](https://img.shields.io/badge/-CLI-333333?style=flat-square) ![npm](https://img.shields.io/badge/-npm-CB3837?style=flat-square)
+
 **CLI-first wrapper for n8nac commands.** Use from terminal, AI agents (via Bash), or MCP clients — same binary, two interfaces.
 
 ## Install
